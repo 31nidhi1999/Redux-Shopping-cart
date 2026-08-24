@@ -1,12 +1,12 @@
 import { useSelector } from 'react-redux'
 import './App.css'
-import Products from './pages/Products'
+import AppRoutes from './routes/AppRoutes'
 
 function App() {
 
   return (
     <>
-      <Products />
+      <AppRoutes />
     </>
   )
 }
