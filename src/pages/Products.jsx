@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux"
 import { fetchProducts } from "../features/products/productSlice"
 import ProductList from "../components/ProductList"
+import { Link } from "react-router-dom"
 
 function Products(){
     const { products, loading, error} = useSelector((state) => state.products)
@@ -22,7 +23,9 @@ function Products(){
     return (
         <div>
             <h1>Products</h1>
-
+            <Link to={`/cart`}>
+                viewcart
+            </Link>
             <ProductList products={products} />
         </div>
     );
