@@ -1,16 +1,688 @@
-# React + Vite
+# Redux Shopping Cart
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple shopping cart application built with **React, Redux Toolkit, React Redux, React Router, and Vite**.
 
-Currently, two official plugins are available:
+The main purpose of this project is to understand how **Redux Toolkit manages global state** in a React application, especially product data and shopping cart state.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Tech Stack
 
-## React Compiler
+* React
+* Redux Toolkit
+* React Redux
+* React Router
+* Vite
+* JavaScript
+* Fake Store API
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+# Project Structure
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```text
+src/
+├── app/
+│   └── store.js
+│
+├── features/
+│   ├── products/
+│   │   ├── productService.js
+│   │   └── productSlice.js
+│   │
+│   └── carts/
+│       └── cartSlice.js
+│
+├── components/
+│   ├── ProductCard.jsx
+│   └── ProductList.jsx
+│
+├── pages/
+│   ├── Products.jsx
+│   ├── ProductDetails.jsx
+│   └── Cart.jsx
+│
+├── routes/
+│   └── AppRoutes.jsx
+│
+├── App.jsx
+└── main.jsx
+```
+
+---
+
+# Redux Toolkit Implementation
+
+## 1. Created `store.js`
+
+**Location:** `src/app/store.js`
+
+Created `store.js` to configure the Redux store and register the reducers for the product and cart features.
+
+```js
+export const store = configureStore({
+  reducer: {
+    products: productReducer,
+    cart: cartReducer,
+  },
+});
+```
+
+### Why?
+
+The Redux store is the **central place where the application's global state is maintained**.
+
+In this project, the store contains:
+
+* `products` state
+* `cart` state
+
+The reducers responsible for these states are registered inside `configureStore()`.
+
+### Redux Concept
+
+**Store:** A centralized container that holds the application's global Redux state.
+
+**`configureStore`:** Redux Toolkit function used to create and configure the Redux store.
+
+---
+
+# 2. Created Feature-Based Folders
+
+Inside the `features` folder, two feature folders were created:
+
+```text
+features/
+├── products/
+└── carts/
+```
+
+### Why?
+
+Feature-based organization keeps related Redux logic together.
+
+For example:
+
+* Product-related Redux logic → `products`
+* Cart-related Redux logic → `carts`
+
+This makes the application easier to understand and maintain.
+
+---
+
+# 3. Created `productSlice.js`
+
+**Location:** `src/features/products/productSlice.js`
+
+Created `productSlice.js` to manage the application's product-related state.
+
+The slice contains the following state:
+
+```js
+const initialState = {
+  products: [],
+  loading: false,
+  error: null,
+  selectedProduct: null,
+  detailsLoading: false,
+  detailsError: null,
+};
+```
+
+### Why?
+
+The application needs to manage multiple states while fetching products:
+
+* Product list
+* Loading status
+* Error status
+* Selected product
+* Product details loading status
+* Product details error status
+
+Keeping these values inside the product slice gives the application one centralized place to manage product state.
+
+### Redux Concept
+
+**`initialState`:** The starting value of a slice's state.
+
+---
+
+# 4. Used `createSlice`
+
+The product state is managed using `createSlice()`.
+
+```js
+const productSlice = createSlice({
+  name: 'product',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    // ...
+  },
+});
+```
+
+### Why?
+
+`createSlice()` simplifies Redux code by allowing us to define:
+
+* Slice name
+* Initial state
+* Reducers
+* Extra reducers
+
+It also automatically generates action creators for reducers defined inside `reducers`.
+
+### Redux Concept
+
+**Slice:** A section of the Redux state along with the logic used to update that state.
+
+For example:
+
+```text
+Redux Store
+│
+├── products → productSlice
+│
+└── cart → cartSlice
+```
+
+---
+
+# 5. Created `productService.js`
+
+**Location:** `src/features/products/productService.js`
+
+Created `productService.js` to keep API-related logic separate from Redux logic.
+
+The service contains functions for:
+
+```js
+getProduct()
+getProductById(id)
+```
+
+These functions communicate with the Fake Store API.
+
+### Why?
+
+Separating API calls from the Redux slice keeps responsibilities clear.
+
+```text
+productService.js
+       ↓
+   API Request
+       ↓
+productSlice.js
+       ↓
+ Redux State
+```
+
+The service handles the API request, while the slice manages the resulting application state.
+
+---
+
+# 6. Used `createAsyncThunk`
+
+The product slice uses `createAsyncThunk()` to handle asynchronous API operations.
+
+```js
+export const fetchProducts = createAsyncThunk(
+  'products/fetchProducts',
+  async () => {
+    return await getProduct();
+  }
+);
+```
+
+A second thunk is used to fetch a single product:
+
+```js
+export const fetchProductById = createAsyncThunk(
+  'products/fetchProductById',
+  async (id) => {
+    return await getProductById(id);
+  }
+);
+```
+
+### Why?
+
+Fetching products from an API is an asynchronous operation.
+
+`createAsyncThunk()` helps manage the lifecycle of that operation.
+
+Each thunk can have three states:
+
+```text
+pending
+   ↓
+fulfilled
+```
+
+or
+
+```text
+pending
+   ↓
+rejected
+```
+
+### Redux Concept
+
+**`createAsyncThunk`:** A Redux Toolkit function used to handle asynchronous operations such as API calls.
+
+---
+
+# 7. Used `extraReducers`
+
+The product slice uses `extraReducers` to handle the states generated by `createAsyncThunk`.
+
+```js
+extraReducers: (builder) => {
+  builder
+    .addCase(fetchProducts.pending, ...)
+    .addCase(fetchProducts.fulfilled, ...)
+    .addCase(fetchProducts.rejected, ...);
+}
+```
+
+### Why?
+
+`createAsyncThunk` automatically generates lifecycle actions.
+
+For `fetchProducts`, Redux Toolkit generates:
+
+```text
+fetchProducts.pending
+fetchProducts.fulfilled
+fetchProducts.rejected
+```
+
+`extraReducers` allows the slice to respond to these actions.
+
+### In this project
+
+When products are being fetched:
+
+```js
+state.loading = true;
+```
+
+When products are successfully fetched:
+
+```js
+state.loading = false;
+state.products = action.payload;
+```
+
+When the request fails:
+
+```js
+state.loading = false;
+state.error = action.error.message;
+```
+
+### Redux Concept
+
+**`extraReducers`:** Used when a slice needs to respond to actions that are created outside its normal `reducers` section.
+
+---
+
+# 8. Created `cartSlice.js`
+
+**Location:** `src/features/carts/cartSlice.js`
+
+Created `cartSlice.js` to manage shopping cart state.
+
+The initial state is:
+
+```js
+const initialState = {
+  items: [],
+};
+```
+
+### Why?
+
+The cart needs to maintain the products currently added by the user.
+
+The `items` array stores those products.
+
+---
+
+# 9. Added Cart Reducers
+
+The cart slice contains the following reducers:
+
+```text
+addToCart
+removeFromCart
+increaseQuantity
+decreaseQuantity
+clearCart
+```
+
+### `addToCart`
+
+Adds a product to the cart.
+
+If the product already exists, its quantity is increased.
+
+```js
+existingItem.quantity += 1;
+```
+
+Otherwise, the product is added with:
+
+```js
+quantity: 1
+```
+
+### `removeFromCart`
+
+Removes a product from the cart based on its ID.
+
+### `increaseQuantity`
+
+Increases the quantity of an existing cart item.
+
+### `decreaseQuantity`
+
+Decreases the quantity of an existing cart item, but does not allow the quantity to go below `1`.
+
+### `clearCart`
+
+Removes all products from the cart.
+
+---
+
+# 10. Actions
+
+The cart slice exports the generated action creators:
+
+```js
+export const {
+  addToCart,
+  clearCart,
+  removeFromCart,
+  increaseQuantity,
+  decreaseQuantity,
+} = cartSlice.actions;
+```
+
+### Why?
+
+These actions are dispatched from React components when the user performs operations such as:
+
+* Adding a product
+* Removing a product
+* Increasing quantity
+* Decreasing quantity
+* Clearing the cart
+
+### Redux Concept
+
+**Action:** An object that describes what happened in the application.
+
+With Redux Toolkit, action creators are automatically generated from the reducers defined inside `createSlice()`.
+
+---
+
+# 11. `dispatch`
+
+`dispatch()` is used to send an action to the Redux store.
+
+For example:
+
+```js
+dispatch(addToCart(product));
+```
+
+### What happens?
+
+```text
+User clicks "Add to Cart"
+          ↓
+dispatch(addToCart(product))
+          ↓
+Redux Store
+          ↓
+cartSlice reducer
+          ↓
+Cart state updated
+          ↓
+React components re-render
+```
+
+### Redux Concept
+
+**`dispatch`:** The function used to send an action to the Redux store.
+
+---
+
+# 12. `useSelector`
+
+`useSelector()` is used by React components to read data from the Redux store.
+
+Example:
+
+```js
+const items = useSelector((state) => state.cart.items);
+```
+
+### Why?
+
+Components need a way to access Redux state.
+
+`useSelector()` allows a component to subscribe to the required part of the Redux state.
+
+### Redux Concept
+
+**`useSelector`:** React Redux hook used to read data from the Redux store.
+
+---
+
+# 13. `useDispatch`
+
+`useDispatch()` provides access to the Redux `dispatch` function inside a React component.
+
+Example:
+
+```js
+const dispatch = useDispatch();
+
+dispatch(addToCart(product));
+```
+
+### Why?
+
+Components use `useDispatch()` when they need to update Redux state by dispatching actions.
+
+### Redux Concept
+
+**`useDispatch`:** React Redux hook used to get the Redux `dispatch` function.
+
+---
+
+# 14. Added Redux `Provider`
+
+In `main.jsx`, the application is wrapped with the Redux `Provider`.
+
+```jsx
+<Provider store={store}>
+  <App />
+</Provider>
+```
+
+### Why?
+
+The `Provider` makes the Redux store available to React components throughout the application.
+
+Without the `Provider`, components would not be able to use:
+
+```js
+useSelector()
+useDispatch()
+```
+
+### Redux Concept
+
+**`Provider`:** A React Redux component that makes the Redux store available to the component tree.
+
+---
+
+# Redux Data Flow
+
+The basic Redux data flow in this project is:
+
+```text
+React Component
+      │
+      │ dispatch(action)
+      ↓
+ Redux Store
+      │
+      ↓
+   Reducer
+      │
+      ↓
+ Updated State
+      │
+      ↓
+ React Component
+      │
+      │ useSelector()
+      ↓
+ Display Updated Data
+```
+
+For product API calls:
+
+```text
+React Component
+      │
+      ↓
+dispatch(fetchProducts())
+      │
+      ↓
+createAsyncThunk
+      │
+      ↓
+productService.js
+      │
+      ↓
+Fake Store API
+      │
+      ↓
+pending / fulfilled / rejected
+      │
+      ↓
+extraReducers
+      │
+      ↓
+Redux State Updated
+      │
+      ↓
+React Component
+```
+
+---
+
+# Redux Toolkit Quick Revision
+
+| Element                  | Simple Definition                                        |
+| ------------------------ | -------------------------------------------------------- |
+| **Store**                | Central place that holds Redux state                     |
+| **`configureStore()`**   | Creates and configures the Redux store                   |
+| **Slice**                | Contains state and the logic to update that state        |
+| **`createSlice()`**      | Creates a Redux slice with less boilerplate              |
+| **`initialState`**       | Starting value of a slice's state                        |
+| **Reducer**              | Function that updates state based on an action           |
+| **Action**               | Describes what happened                                  |
+| **`dispatch()`**         | Sends an action to Redux                                 |
+| **`useSelector()`**      | Reads data from Redux state                              |
+| **`useDispatch()`**      | Provides the `dispatch` function                         |
+| **`Provider`**           | Makes the Redux store available to React components      |
+| **`createAsyncThunk()`** | Handles asynchronous operations such as API calls        |
+| **`extraReducers`**      | Handles actions generated outside the slice's `reducers` |
+
+---
+
+# Important Interview Points
+
+### Why Redux Toolkit instead of traditional Redux?
+
+Redux Toolkit reduces Redux boilerplate and provides utilities such as:
+
+* `configureStore`
+* `createSlice`
+* `createAsyncThunk`
+
+It makes Redux state management simpler and easier to maintain.
+
+### What is the difference between `reducers` and `extraReducers`?
+
+**`reducers`**
+
+Used for actions defined directly inside the slice.
+
+Example:
+
+```js
+reducers: {
+  addToCart: (state, action) => {
+    // update cart
+  }
+}
+```
+
+**`extraReducers`**
+
+Used when the slice needs to respond to actions defined elsewhere.
+
+In this project, `extraReducers` handles the lifecycle actions generated by `createAsyncThunk`.
+
+### Why are `pending`, `fulfilled`, and `rejected` useful?
+
+They allow the application to represent different API states:
+
+```text
+pending   → API request is running
+fulfilled → API request succeeded
+rejected  → API request failed
+```
+
+This allows the UI to show appropriate loading, success, or error states.
+
+---
+
+# Summary
+
+This project demonstrates how to use **Redux Toolkit with React** to manage:
+
+* Product state
+* Product API requests
+* Product loading and error states
+* Selected product
+* Shopping cart state
+* Cart item quantities
+* Add/remove/clear cart operations
+
+The main Redux architecture is:
+
+```text
+                    Redux Store
+                         │
+              ┌──────────┴──────────┐
+              ↓                     ↓
+        Product Slice          Cart Slice
+              │                     │
+       createAsyncThunk       Cart Reducers
+              │                     │
+       Product Service         Cart Actions
+              │                     │
+              ↓                     ↓
+        Product API            Cart State
+```
+
+The project uses a **feature-based Redux structure**, which keeps product and cart logic separated and makes the application easier to maintain.
